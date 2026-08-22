@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to WordPress Gutenberg Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .input-section, .output-section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        .section-title {
+            margin-top: 0;
+            color: #3498db;
+            font-size: 1.2em;
+        }
+        textarea {
+            width: 100%;
+            min-height: 250px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        textarea.small {
+            min-height: 400px; /* Aumentato per mostrare meglio il template lungo */
+        }
+        .file-input {
+            margin-bottom: 15px;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .download-btn {
+            background-color: #27ae60;
+        }
+        .download-btn:hover {
+            background-color: #219653;
+        }
+        .status {
+            margin-top: 10px;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+        .success { color: #27ae60; }
+        .error { color: #e74c3c; }
+        .loading {
+            display: none;
+            margin: 10px 0;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .stats {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Markdown to WordPress Gutenberg Converter</h1>
+    
+    <div class="container">
+        <div class="grid-2">
+            <div class="input-section">
+                <h2 class="section-title">1. Input (Markdown)</h2>
+                <div class="file-input">
+                    <input type="file" id="mdFile" accept=".md,.txt">
+                </div>
+                <textarea id="inputText" placeholder="Incolla qui il tuo Markdown o carica un file..."></textarea>
+                <div class="stats" id="inputStats">Caratteri: 0 | Righe: 0</div>
+            </div>
+
+            <div class="input-section">
+                <h2 class="section-title">2. Template WordPress</h2>
+                <p style="font-size: 0.9em; color: #666; margin-top: 0;">Template di base precaricato.</p>
+                <textarea id="templateText" class="small">[intro]
+<!-- wp:paragraph -->
+<p>[rt_reading_time label="⌛" postfix="minuti" postfix_singular="minuto"]</p>
+<!-- /wp:paragraph -->
+
+<fieldset style="background: #FFEAE9; border: 4px double #940F04; width: auto; padding: 35px;">
+<legend style="color: #003366; font-weight: bold; font-size: larger">Per chi va di fretta</legend>
+<ul>
+<li>primo elemento</li>
+<li>secondo elemento</li>
+<li>terzo elemento</li>
+</ul>
+</fieldset>
+
+[cap]
+
+<!-- wp:heading {"textAlign":"center","level":1} -->
+<h1 class="wp-block-heading has-text-align-center">Titolo</h1>
+<!-- /wp:heading -->
+
+<!-- wp:image {"id":20991,"sizeSlug":"full","linkDestination":"none","align":"center"} -->
+<figure class="wp-block-image aligncenter size-full"><img src="https://www.volpegiocosa.it/wp-content/uploads/2024/08/trauma-tram.jpg" alt="" class="wp-image-20991"/></figure>
+<!-- /wp:image -->
+
+<!-- taglia da qui -->
+<div class="container">
+<div class="box">
+<div class="icon"><img src="https://www.volpegiocosa.it/wp-content/uploads/2024/08/autore-bg.png" alt="Icona" /></div>
+<div class="content">
+<p class="title">Autori</p>
+<p class="value">Marco Saponaro <br />Luca Borsa</p>
+</div>
+</div>
+<div class="box">
+<div class="icon"><img src="https://www.volpegiocosa.it/wp-content/uploads/2024/08/editore-bg.png" alt="Icona" /></div>
+<div class="content">
+<p class="title">Editore</p>
+<p class="value">Unicopli</p>
+</div>
+</div>
+<div class="box">
+<div class="icon"><img src="https://www.volpegiocosa.it/wp-content/uploads/2024/08/persone-bg.png" alt="Icona" /></div>
+<div class="content">
+<p class="title">Giocatori</p>
+<p class="value">2-6</p>
+</div>
+</div>
+<div class="box">
+<div class="icon"><img src="https://www.volpegiocosa.it/wp-content/uploads/2024/08/eta-bg.png" alt="Icona" /></div>
+<div class="content">
+<p class="title">Età</p>
+<p class="value">8+</p>
+</div>
+</div>
+<div class="box">
+<div class="icon"><img src="https://www.volpegiocosa.it/wp-content/uploads/2024/08/tempo-bg.png" alt="Icona" /></div>
+<div class="content">
+<p class="title">Durata</p>
+<p class="value">30-45 min</p>
+</div>
+</div>
+<div class="box">
+<div class="icon"><img src="https://www.volpegiocosa.it/wp-content/uploads/2024/08/costo-bg.png" alt="Icona" /></div>
+<div class="content">
+<p class="title">Costo</p>
+<p class="value">19€ circa</p>
+</div>
+</div>
+</div>
+<!-- fino a qui -->
+
+[corpo]
+
+<!-- wp:group {"layout":{"type":"constrained"}} -->
+<div class="wp-block-group">
+
+<!-- wp:html -->
+<fieldset style="background: #ADD8E6; border: 4px double #940F04; width: auto; padding: 35px;">
+  <legend style="color: #003366; font-weight: bold; font-size: larger">Link utili</legend>
+  <ul>
+    <li><a href="https://www.html.it/" target="_blank">Link 1</a></li>
+    <li><a href="https://www.example.com/" target="_blank">Link 2</a></li>
+    <li><a href="https://www.example.com/" target="_blank">Link 3</a></li>
+    <li><a href="https://www.example.com/" target="_blank">Link 4</a></li>
+    <li><a href="https://www.example.com/" target="_blank">Link 5</a></li>
+  </ul>
+</fieldset>
+<!-- /wp:html -->
+
+<!-- wp:heading -->
+<h2 class="wp-block-heading"><strong>In conclusione</strong></h2>
+<!-- /wp:heading -->
+
+[finale]
+
+</div>
+<!-- /wp:group -->
+
+<!-- taglia da qui -->
+<!-- wp:paragraph -->
+<p>[mi_piace]</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:post-date {"textAlign":"right"} /-->
+<!-- fino a qui --></textarea>
+            </div>
+        </div>
+        
+        <div class="output-section">
+            <h2 class="section-title">Output (WordPress Gutenberg)</h2>
+            <div class="loading" id="loadingIndicator">
+                <div class="loading-spinner"></div>
+                <p>Elaborazione in corso...</p>
+            </div>
+            <textarea id="outputText" readonly placeholder="Il codice di WordPress Gutenberg apparirà qui..."></textarea>
+            <div class="stats" id="outputStats">Caratteri: 0 | Righe: 0</div>
+            <div class="buttons">
+                <button id="convertBtn">Converti</button>
+                <button id="downloadBtn" class="download-btn" disabled>Scarica TXT</button>
+                <button id="copyBtn" disabled>Copia negli Appunti</button>
+                <button id="clearBtn">Pulisci Tutto</button>
+            </div>
+            <div class="status" id="statusMessage"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputText = document.getElementById('inputText');
+            const templateText = document.getElementById('templateText');
+            const outputText = document.getElementById('outputText');
+            const convertBtn = document.getElementById('convertBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const mdFile = document.getElementById('mdFile');
+            const statusMessage = document.getElementById('statusMessage');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const inputStats = document.getElementById('inputStats');
+            const outputStats = document.getElementById('outputStats');
+            
+            // Aggiorna statistiche
+            function updateStats(textarea, statsElement) {
+                const text = textarea.value;
+                const charCount = text.length;
+                const lineCount = text ? text.split('\n').length : 0;
+                statsElement.textContent = `Caratteri: ${charCount} | Righe: ${lineCount}`;
+            }
+            
+            // Inizializza le statistiche all'avvio per eventuali campi precaricati
+            updateStats(inputText, inputStats);
+            updateStats(outputText, outputStats);
+            
+            inputText.addEventListener('input', () => updateStats(inputText, inputStats));
+            outputText.addEventListener('input', () => updateStats(outputText, outputStats));
+            
+            // Gestione upload file
+            mdFile.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    inputText.value = e.target.result;
+                    updateStats(inputText, inputStats);
+                    statusMessage.textContent = `File "${file.name}" caricato con successo.`;
+                    statusMessage.className = 'status success';
+                };
+                reader.onerror = function() {
+                    statusMessage.textContent = 'Errore durante la lettura del file.';
+                    statusMessage.className = 'status error';
+                };
+                reader.readAsText(file);
+            });
+
+            // ==========================================
+            // LOGICA DI CONVERSIONE (Porting da MATLAB)
+            // ==========================================
+            
+            function isCustomMarker(line) {
+                const tags = ['[intro]','[/intro]','[cap]','[/cap]','[corpo]','[/corpo]','[finale]','[/finale]'];
+                return tags.includes(line);
+            }
+
+            function applyFormatting(text) {
+                let formatted = text;
+                const LINK_START = '\uE000', LINK_MID = '\uE001', LINK_END = '\uE002';
+                const BOLD_START = '\uE003', BOLD_END = '\uE004';
+                const ITALIC_START = '\uE005', ITALIC_END = '\uE006';
+                const EM_START = '\uE007', EM_END = '\uE008';
+
+                // 1. Link
+                formatted = formatted.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, LINK_START + '$2' + LINK_MID + '$1' + LINK_END);
+                // 2. Bold
+                formatted = formatted.replace(/\*(.*?)\*/g, BOLD_START + '$1' + BOLD_END);
+                // 3. Italic
+                formatted = formatted.replace(/_(.*?)_/g, ITALIC_START + '$1' + ITALIC_END);
+                // 4. Enfasi §§
+                formatted = formatted.replace(/§§(.*?)§§/g, EM_START + '$1' + EM_END);
+
+                // 5. Escape HTML
+                formatted = formatted.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+                // 6. Sostituisci placeholder
+                formatted = formatted.split(LINK_START).join('<a href="');
+                formatted = formatted.split(LINK_MID).join('" target="_blank" rel="noopener noreferrer">');
+                formatted = formatted.split(LINK_END).join('</a>');
+                formatted = formatted.split(BOLD_START).join('<strong>');
+                formatted = formatted.split(BOLD_END).join('</strong>');
+                formatted = formatted.split(ITALIC_START).join('<i>');
+                formatted = formatted.split(ITALIC_END).join('</i>');
+                formatted = formatted.split(EM_START).join('<em>');
+                formatted = formatted.split(EM_END).join('</em>');
+
+                return formatted;
+            }
+
+            function escapeHTML(text) {
+                return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+
+            function convertMarkdownToHTML(rawText) {
+                // Normalizza newline
+                let text = rawText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                let lines = text.split('\n');
+                let htmlLines = [];
+                let inParagraph = false;
+                let inList = false;
+
+                for (let i = 0; i < lines.length; i++) {
+                    let trimmed = lines[i].trim();
+                    if (!trimmed) {
+                        lines[i] = '';
+                        trimmed = '';
+                    }
+
+                    // Marker custom
+                    if (isCustomMarker(trimmed)) {
+                        if (inParagraph) {
+                            htmlLines[htmlLines.length - 1] += "</p>";
+                            inParagraph = false;
+                        }
+                        if (inList) {
+                            htmlLines.push("</ul>");
+                            inList = false;
+                        }
+                        htmlLines.push(trimmed);
+                        continue;
+                    }
+
+                    // Riga vuota
+                    if (!trimmed) {
+                        if (inParagraph) {
+                            htmlLines[htmlLines.length - 1] += "</p>";
+                            inParagraph = false;
+                        }
+                        if (inList) {
+                            htmlLines.push("</ul>");
+                            inList = false;
+                        }
+                        continue;
+                    }
+
+                    // Titoli
+                    let isHeader = false;
+                    for (let lvl = 4; lvl >= 1; lvl--) {
+                        let h = '#'.repeat(lvl);
+                        let regex = new RegExp('^' + h + '\\s+(.*?)\\s*#*\\s*$');
+                        let match = trimmed.match(regex);
+                        if (match) {
+                            if (inParagraph) {
+                                htmlLines[htmlLines.length - 1] += "</p>";
+                                inParagraph = false;
+                            }
+                            if (inList) {
+                                htmlLines.push("</ul>");
+                                inList = false;
+                            }
+                            let headerText = match[1].trim();
+                            htmlLines.push(`<h${lvl}>${escapeHTML(headerText)}</h${lvl}>`);
+                            isHeader = true;
+                            break;
+                        }
+                    }
+                    if (isHeader) continue;
+
+                    // Liste (+ )
+                    if (trimmed.startsWith('+ ')) {
+                        if (inParagraph) {
+                            htmlLines[htmlLines.length - 1] += "</p>";
+                            inParagraph = false;
+                        }
+                        if (!inList) {
+                            htmlLines.push("<ul>");
+                            inList = true;
+                        }
+                        htmlLines.push("<li>" + applyFormatting(trimmed.substring(2)) + "</li>");
+                        continue;
+                    }
+
+                    // Paragrafi
+                    if (!inParagraph) {
+                        htmlLines.push("<p>" + applyFormatting(trimmed));
+                        inParagraph = true;
+                    } else {
+                        htmlLines[htmlLines.length - 1] += "<br>" + applyFormatting(trimmed);
+                    }
+                }
+
+                if (inParagraph) htmlLines[htmlLines.length - 1] += "</p>";
+                if (inList) htmlLines.push("</ul>");
+
+                return htmlLines.join('\n');
+            }
+
+            function extractSection(content, tag) {
+                let endTag = '[/' + tag.substring(1);
+                let s = content.indexOf(tag);
+                let e = content.indexOf(endTag);
+                if (s === -1 || e === -1) return "";
+                return content.substring(s + tag.length, e).trim();
+            }
+
+            function convertToGutenberg(htmlBlock) {
+                let lines = htmlBlock.split('\n');
+                let out = [];
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i].trim();
+                    if (!line) continue;
+
+                    // Heading
+                    let hMatch = line.match(/^<h(\d)>(.*)<\/h\d>$/);
+                    if (hMatch) {
+                        let lvl = hMatch[1];
+                        let txt = hMatch[2];
+                        out.push(`<!-- wp:heading {"level":${lvl}} -->\n<h${lvl} class="wp-block-heading">${txt}</h${lvl}>\n<!-- /wp:heading -->`);
+                        continue;
+                    }
+
+                    // Paragraph
+                    let pMatch = line.match(/^<p>(.*)<\/p>$/);
+                    if (pMatch) {
+                        let txt = pMatch[1];
+                        out.push(`<!-- wp:paragraph -->\n<p>${txt}</p>\n<!-- /wp:paragraph -->`);
+                        continue;
+                    }
+
+                    // Fallback per Liste e altro
+                    out.push(line);
+                }
+                return out.join('\n\n');
+            }
+
+            // Azione del Converti
+            convertBtn.addEventListener('click', function() {
+                const mdText = inputText.value;
+                const tplText = templateText.value;
+                
+                if (!mdText.trim()) {
+                    statusMessage.textContent = 'Inserisci il testo Markdown da convertire.';
+                    statusMessage.className = 'status error';
+                    return;
+                }
+                
+                loadingIndicator.style.display = 'block';
+                statusMessage.textContent = '';
+                
+                setTimeout(() => {
+                    try {
+                        // 1. Markdown -> HTML
+                        let htmlIntermedio = convertMarkdownToHTML(mdText);
+                        
+                        // 2. HTML -> WordPress
+                        let sectionTags = ['intro', 'cap', 'corpo', 'finale'];
+                        let sections = {};
+                        for (let tag of sectionTags) {
+                            let raw = extractSection(htmlIntermedio, '[' + tag + ']');
+                            sections[tag] = convertToGutenberg(raw);
+                        }
+
+                        // 3. Sostituzione nel Template
+                        let finalWp = tplText;
+                        for (let tag of sectionTags) {
+                            finalWp = finalWp.replace('[' + tag + ']', sections[tag] !== undefined ? sections[tag] : '');
+                        }
+                        
+                        // Pulizia newline
+                        finalWp = finalWp.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+                        outputText.value = finalWp;
+                        updateStats(outputText, outputStats);
+                        
+                        downloadBtn.disabled = false;
+                        copyBtn.disabled = false;
+                        
+                        statusMessage.textContent = 'Conversione completata con successo!';
+                        statusMessage.className = 'status success';
+                    } catch (error) {
+                        statusMessage.textContent = 'Errore durante la conversione: ' + error.message;
+                        statusMessage.className = 'status error';
+                    } finally {
+                        loadingIndicator.style.display = 'none';
+                    }
+                }, 100);
+            });
+            
+            // Download TXT
+            downloadBtn.addEventListener('click', function() {
+                const wpCode = outputText.value;
+                if (!wpCode.trim()) return;
+                
+                const blob = new Blob([wpCode], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'output_wp.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                statusMessage.textContent = 'File scaricato con successo!';
+                statusMessage.className = 'status success';
+            });
+            
+            // Copia negli appunti
+            copyBtn.addEventListener('click', function() {
+                outputText.select();
+                document.execCommand('copy');
+                
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Copiato!';
+                setTimeout(() => { copyBtn.textContent = originalText; }, 2000);
+                
+                statusMessage.textContent = 'Codice copiato negli appunti!';
+                statusMessage.className = 'status success';
+            });
+            
+            // Pulisci
+            clearBtn.addEventListener('click', function() {
+                inputText.value = '';
+                outputText.value = '';
+                mdFile.value = '';
+                downloadBtn.disabled = true;
+                copyBtn.disabled = true;
+                statusMessage.textContent = '';
+                updateStats(inputText, inputStats);
+                updateStats(outputText, outputStats);
+            });
+        });
+    </script>
+</body>
+</html>
