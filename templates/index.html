@@ -465,6 +465,13 @@
                         return;
                     }
 
+                    const placeholder = document.createElement('option');
+                    placeholder.value = '';
+                    placeholder.textContent = '-- Seleziona il gioco corretto --';
+                    placeholder.disabled = true;
+                    placeholder.selected = true;
+                    bggResults.appendChild(placeholder);
+
                     for (const item of data) {
                         const opt = document.createElement('option');
                         opt.value = item.id;
