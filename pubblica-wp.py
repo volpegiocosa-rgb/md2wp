@@ -23,6 +23,14 @@ try:
 except ImportError:
     sys.exit("Manca il pacchetto 'beautifulsoup4'. Installa con: pip install requests beautifulsoup4")
 
+if sys.platform == "win32":
+    # Alcuni terminali Windows usano una codepage legacy (non UTF-8) che fa
+    # fallire la stampa di caratteri come "€" o le lettere accentate.
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(encoding="utf-8")
+        except Exception:
+            pass
 
 # ==========================================================================
 # Caricamento .env (parser minimale, nessuna dipendenza da python-dotenv)
