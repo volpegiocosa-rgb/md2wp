@@ -163,6 +163,28 @@
         .price-details span {
             margin-right: 12px;
         }
+        .wp-publish-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .wp-publish-row input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+        .wp-btn {
+            background-color: #21759b;
+        }
+        .wp-btn:hover {
+            background-color: #1a5f7f;
+        }
     </style>
 </head>
 <body>
@@ -343,6 +365,12 @@
                 <button id="clearBtn">Pulisci Tutto</button>
             </div>
             <div class="status" id="statusMessage"></div>
+
+            <div class="wp-publish-row">
+                <input type="text" id="wpPostTitle" placeholder="Titolo dell'articolo su WordPress">
+                <button id="createWpPostBtn" class="wp-btn" disabled>Crea articolo su WordPress (bozza)</button>
+            </div>
+            <div class="status" id="wpStatus"></div>
         </div>
     </div>
 
@@ -357,6 +385,9 @@
             const clearBtn = document.getElementById('clearBtn');
             const mdFile = document.getElementById('mdFile');
             const statusMessage = document.getElementById('statusMessage');
+            const wpPostTitle = document.getElementById('wpPostTitle');
+            const createWpPostBtn = document.getElementById('createWpPostBtn');
+            const wpStatus = document.getElementById('wpStatus');
             const loadingIndicator = document.getElementById('loadingIndicator');
             const inputStats = document.getElementById('inputStats');
             const outputStats = document.getElementById('outputStats');
@@ -758,6 +789,10 @@
 
                         downloadBtn.disabled = false;
                         copyBtn.disabled = false;
+                        createWpPostBtn.disabled = false;
+                        if (!wpPostTitle.value.trim() && gameTitle.value.trim()) {
+                            wpPostTitle.value = gameTitle.value.trim();
+                        }
 
                         statusMessage.textContent = 'Conversione completata con successo!';
                         statusMessage.className = 'status success';
@@ -802,6 +837,45 @@
                 statusMessage.className = 'status success';
             });
 
+            // Crea articolo su WordPress (bozza)
+            createWpPostBtn.addEventListener('click', async function() {
+                const title = wpPostTitle.value.trim();
+                const content = outputText.value;
+
+                if (!title) {
+                    wpStatus.textContent = 'Inserisci il titolo dell\'articolo.';
+                    wpStatus.className = 'status error';
+                    return;
+                }
+                if (!content.trim()) {
+                    wpStatus.textContent = 'Nessun contenuto da pubblicare: esegui prima la conversione.';
+                    wpStatus.className = 'status error';
+                    return;
+                }
+
+                createWpPostBtn.disabled = true;
+                wpStatus.textContent = 'Creazione articolo su WordPress in corso...';
+                wpStatus.className = 'status';
+
+                try {
+                    const resp = await fetch('/api/wp/create_post', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, content })
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok) throw new Error(data.error || 'Errore nella creazione dell\'articolo');
+
+                    wpStatus.innerHTML = `Bozza creata con successo! <a href="${data.edit_url}" target="_blank" rel="noopener noreferrer">Apri l'articolo in WordPress</a>`;
+                    wpStatus.className = 'status success';
+                } catch (err) {
+                    wpStatus.textContent = 'Errore nella creazione dell\'articolo: ' + err.message;
+                    wpStatus.className = 'status error';
+                } finally {
+                    createWpPostBtn.disabled = false;
+                }
+            });
+
             // Pulisci
             clearBtn.addEventListener('click', function() {
                 inputText.value = '';
@@ -809,6 +883,9 @@
                 mdFile.value = '';
                 downloadBtn.disabled = true;
                 copyBtn.disabled = true;
+                createWpPostBtn.disabled = true;
+                wpPostTitle.value = '';
+                wpStatus.textContent = '';
                 statusMessage.textContent = '';
                 updateStats(inputText, inputStats);
                 updateStats(outputText, outputStats);
